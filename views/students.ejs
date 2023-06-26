@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Page</title>
+</head>
+<body>
+    <!-- 把所有學生放在 ul 裡面 http://localhost:3000/students/100 網址入入加進去的 id 就會跑出來   -->
+    <ul>
+        <% data.forEach(student => { %>
+            <li><a href="/students/<%= student.id %>"><%= student.name %></a></li>  <!-- 放進去資料會顯示這個首頁 連結 app的 -->
+       <% }) %>
+    </ul>
+</body>
+</html>

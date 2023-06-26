@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Student</title>
+</head>
+<body>
+    <!-- 把 app.js 的 app.post("students/insert", (req, res) => {}); 放過來  -->
+    <!-- 裡面就是一個 html form 然後這個網站要弄到哪裡 再回到 app.js 設定 post 連結 後面記得放大寫 POST-->
+    <form action="/students/insert" method="POST">
+        <label for="id">ID:</label>
+        <input type="number" id="id" name="id" />
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" />
+        <label for="age">Age:</label>
+        <input type="number" id="age" name="age" />
+        <label for="merit">Merit:</label>
+        <input type="number" id="merit" name="merit" />
+        <label for="other">Other:</label>
+        <input type="number" id="other" name="other" />
+        <button>Submit</button>
+    </form> 
+</body>
+</html>

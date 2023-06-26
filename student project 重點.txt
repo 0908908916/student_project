@@ -1,0 +1,1263 @@
+基本架構 和 API 差不多的程式架構
+先開啟 git bash 到桌面 cd Desktop/
+建立 student project 資料夾 (mkdir "student project")
+再到資料夾裡面  (cd student\ project/)
+創建檔案 (touch app.js)
+在創建兩個資料夾  (mkdir public), (mkdir views)
+然後再退回去  (cd ..)
+在打這個 code student\ project/ (vscode 就打開了)
+
+再者轉換到 CMD 裡面  
+一樣到桌面 (cd Desktop)
+再到這個資料夾裡面 (cd student project)
+打入指令  npm init
+裡面的輸入  description: This is for mongoose and express together 
+其他都 enter
+再來下載 npm 模組 npm install express mongoose nodemon ejs method-override
+
+
+
+
+
+製作 models 的資料夾 裡面放 student.js 檔案  目的把檔案 放進這個 studentDB 裡面 還要再做一個 
+html的 form 在js裡面做物件
+// 記得一個重點 如果 mongoDB 報錯沒有連結服務的話 請到 命令提示字元右鍵管理者身分 輸入代碼 net start MongoDB
+
+
+第一個步驟
+
+在 studend.js 裡面寫程式碼 做物件
+
+const mongoose = require("mongoose");
+
+const studentSchema = new mongoose.Schema({
+  id: {
+    type: Number,
+    require: true,
+  },
+  name: {
+    type: String,
+    require: true,
+  },
+  age: {
+    type: Number,
+    default: 18,
+    max: [80, "Too old in this school"],
+  },
+  scholarship: {
+    merit: {
+      type: Number,
+      min: 0,
+      max: [5000, "Too much merit scholarship"],
+    },
+    other: {
+      type: Number,
+      min: 0,
+    },
+  },
+});
+
+const Student = mongoose.model("Student", studentSchema);
+
+module.exports = Student; // exports 唯一的物件
+
+// 再回到 app.js 連結這個物件
+// const Student = require("./models/student");
+// 以上程式碼為連結方式
+
+
+
+第二個步驟 再增加 students 的頁面 在 app.js
+
+
+
+const express = require("express");
+const app = express();
+const ejs = require("ejs");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const Student = require("./models/student"); // 連結到 student.js 運用他的模組
+
+app.use(express.static("public"));
+app.use(bodyParser.urlencoded({ extended: true })); // 幫助我們處理不同格式的請求資料 解析 JSON
+app.set("view engine", "ejs");
+
+mongoose
+  .connect("mongodb://localhost:27017/studentDB", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Successfully connected to mongoDB.");
+  })
+  .catch((e) => {
+    console.log("Connection failed.");
+    console.log(e);
+  });
+
+app.get("/", (req, res) => {
+  res.send("This is homepage.");
+});
+
+// 新增加一個頁面 在裡面要有一個 html 的 form 網頁初始  就可以新增學生進來
+app.get("/students/insert", (req, res) => {
+  res.render("studentInsert.ejs"); // 在 view 裡面新增這個 studentInsert.ejs
+});
+
+app.listen(3000, () => {
+  console.log("Server is running on port 3000.");
+});
+
+// localhost:3000 為網址
+
+
+
+/////////////////////////////
+//////////////////////////////
+/////////////////////////////
+
+做一個 html form 在 views 資料夾創建  studentInsert.ejs 寫程式嗎 建立一個 form
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Student</title>
+</head>
+<body>
+    <form action=""></form> <!-- 裡面就是一個 html form 然後這個網站要弄到哪裡 再回到 app.js 設定 post 連結-->
+</body>
+</html>
+
+
+
+/////////////////////////////
+///////////////////////////////
+
+///////////////////////////////
+
+再回到 app.js 連結程式碼  怎麼 運用這個 form
+
+
+const express = require("express");
+const app = express();
+const ejs = require("ejs");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const Student = require("./models/student"); // 連結到 student.js 運用他的模組
+
+app.use(express.static("public"));
+app.use(bodyParser.urlencoded({ extended: true })); // 幫助我們處理不同格式的請求資料 解析 JSON
+app.set("view engine", "ejs");
+
+mongoose
+  .connect("mongodb://127.0.0.1:27017/studentDB", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Successfully connected to mongoDB.");
+  })
+  .catch((e) => {
+    console.log("Connection failed.");
+    console.log(e);
+  });
+
+app.get("/", (req, res) => {
+  res.send("This is homepage.");
+});
+///////////////////////
+
+// 新增加一個頁面 在裡面要有一個 html 的 form 網頁初始  就可以新增學生進來 全部的學生
+app.get("/students/insert", (req, res) => {
+  res.render("studentInsert.ejs"); // 在 view 裡面新增這個 studentInsert.ejs
+});
+/////////////////////
+// http://localhost:3000/students/insert 網址連到這就會出現設定的 tabel
+// 連結運用到  studentInsert.ejs get 產生一個 html form 可以新增學生 post 會把 data 放到 mongoDB裡面 在檔案裏面創建列表
+app.post("/students/insert", (req, res) => {
+  console.log(req.body); // 來看一下這個 form 回傳給我們的是甚麼
+  res.send("thanks for posting."); // 這個成功他就會把網站輸入的資料傳入  { id: '100', name: 'jie jing', age: '25', merit: '1500', other: '0' }
+});
+
+//////////////////////////////
+//////////////////////////////
+app.listen(3000, () => {
+  console.log("Server is running on port 3000.");
+});
+
+// localhost:3000 為網址
+
+/////////////////////
+/////////////////////
+
+程式一步一步走 
+
+
+
+再到 studentInsert.ejs 設定裡面的 form label
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Student</title>
+</head>
+<body>
+    <!-- 把 app.js 的 app.post("students/insert", (req, res) => {}); 放過來  -->
+    <!-- 裡面就是一個 html form 然後這個網站要弄到哪裡 再回到 app.js 設定 post 連結 後面記得放大寫 POST-->
+    <form action="/students/insert" method="POST">
+        <label for="id">ID:</label>
+        <input type="number" id="id" name="id" />
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" />
+        <label for="age">Age:</label>
+        <input type="number" id="age" name="age" />
+        <label for="merit">Merit:</label>
+        <input type="number" id="merit" name="merit" />
+        <label for="other">Other:</label>
+        <input type="number" id="other" name="other" />
+        <button>Submit</button>
+    </form> 
+</body>
+</html>
+
+
+/////////////////////////////////
+
+到網站填入資料 就可以送到這個裡面 命令提示自元會顯示
+
+再來更改 app.js 的程式碼 某部份而已
+
+const express = require("express");
+const app = express();
+const ejs = require("ejs");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const Student = require("./models/student"); // 連結到 student.js 運用他的模組
+
+app.use(express.static("public"));
+app.use(bodyParser.urlencoded({ extended: true })); // 幫助我們處理不同格式的請求資料 解析 JSON
+app.set("view engine", "ejs");
+
+mongoose
+  .connect("mongodb://127.0.0.1:27017/studentDB", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Successfully connected to mongoDB.");
+  })
+  .catch((e) => {
+    console.log("Connection failed.");
+    console.log(e);
+  });
+
+app.get("/", (req, res) => {
+  res.send("This is homepage.");
+});
+///////////////////////
+
+// 做一個連結到 students 頁面 獲取 ejs
+app.get("/students", async (req, res) => {
+  let data = await Student.find(); // 放進去資料會顯示這個首頁
+  res.render("students.ejs", { data }); // 把找到 所有的 data 放進去 data 裡面就有找到所有學生
+});
+
+///////////////////////
+
+// 新增加一個頁面 在裡面要有一個 html 的 form 網頁初始  就可以新增學生進來 全部的學生
+app.get("/students/insert", (req, res) => {
+  res.render("studentInsert.ejs"); // 在 view 裡面新增這個 studentInsert.ejs
+});
+/////////////////////
+/////////////////////
+
+// 再來看能不能把 students.ejs 的頁面顯示出來 在 views 裡面創建 students.ejs
+
+/////////////////////
+// http://localhost:3000/students/insert 網址連到這就會出現設定的 tabel
+// 連結運用到  studentInsert.ejs get 產生一個 html form 可以新增學生 post 會把 data 放到 mongoDB裡面 在檔案裏面創建列表
+app.post("/students/insert", (req, res) => {
+  // 得知下面可以的話 可以變成這樣寫
+  // 靠 html form 可以新增資料的方式
+  let { id, name, age, merit, other } = req.body;
+  let newStudent = new Student({
+    id,
+    name,
+    age,
+    scholarship: { merit, other },
+  });
+  newStudent
+    .save()
+    .then(() => {
+      console.log("Student accepted.");
+      // 如果成功的話 就 render 到這個 accept.ejs 頁面
+      res.render("accept.ejs");
+    })
+    .catch((e) => {
+      console.log("Student not accepted.");
+      console.log(e);
+      res.render("reject.ejs");
+      // 如果失敗的話 就 render 到這個 reject.ejs 頁面
+    });
+  //console.log(req.body); // 來看一下這個 form 回傳給我們的是甚麼 出現在命令提示自元
+  //res.send("thanks for posting."); // 這個成功他就會把網站輸入的資料傳入  { id: '100', name: 'jie jing', age: '25', merit: '1500', other: '0' }
+});
+
+//////////////////////////////
+//////////////////////////////
+app.listen(3000, () => {
+  console.log("Server is running on port 3000.");
+});
+
+// localhost:3000 為網址
+
+
+
+//////////////////////////
+加入的 ejs 有三個檔案
+
+accept.ejs
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Thanks for posting.</h1>
+    <h1>Data has been saved.</h1>
+    <!-- 把他導回所有學生的一個頁面 -->
+    <a href="/students">Go back to students page.</a>
+</html>
+
+
+
+reject.ejs
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Error!!</h1>
+    <h1>Data has not been saved.</h1>
+    <!-- 把他導回所有學生的一個頁面 -->
+    <a href="/students">Go back to students page.</a>
+</body>
+</html>
+
+students.ejs
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Page</title>
+</head>
+<body>
+    <!-- 把所有學生放在 ul 裡面  -->
+    <ul>
+        <% data.forEach(student => { %>
+            <li><%= student.name %></li>  <!-- 放進去資料會顯示這個首頁 連結 app的 -->
+       <% }) %>
+    </ul>
+</body>
+</html>
+
+
+
+//////////////////////////////////
+/////////////////////////////////
+
+
+
+//  以上靠 html form 可以新增資料的方式
+
+
+
+以下有修改 app.js 裡面的代碼  設定如果 資料亂打一通就會出現錯誤 
+
+
+
+const express = require("express");
+const app = express();
+const ejs = require("ejs");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const Student = require("./models/student"); // 連結到 student.js 運用他的模組
+
+app.use(express.static("public"));
+app.use(bodyParser.urlencoded({ extended: true })); // 幫助我們處理不同格式的請求資料 解析 JSON
+app.set("view engine", "ejs");
+
+mongoose
+  .connect("mongodb://127.0.0.1:27017/studentDB", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Successfully connected to mongoDB.");
+  })
+  .catch((e) => {
+    console.log("Connection failed.");
+    console.log(e);
+  });
+
+app.get("/", (req, res) => {
+  res.send("This is homepage.");
+});
+///////////////////////
+
+// 做一個連結到 students 頁面 獲取 ejs 再來如果再以下 students 發生問題怎麼辦 用 try
+app.get("/students", async (req, res) => {
+  try {
+    let data = await Student.find(); // 放進去資料會顯示這個首頁
+    res.render("students.ejs", { data }); // 把找到 所有的 data 放進去 data 裡面就有找到所有學生
+  } catch {
+    res.send("Error with finding data.");
+  }
+});
+
+///////////////////////
+
+// 新增加一個頁面 在裡面要有一個 html 的 form 網頁初始  就可以新增學生進來 全部的學生
+app.get("/students/insert", (req, res) => {
+  res.render("studentInsert.ejs"); // 在 view 裡面新增這個 studentInsert.ejs
+});
+/////////////////////
+/////////////////////
+
+// 再來看能不能把 students.ejs 的頁面顯示出來 在 views 裡面創建 students.ejs
+
+/////////////////////
+// http://localhost:3000/students/insert 網址連到這就會出現設定的 tabel
+// 連結運用到  studentInsert.ejs get 產生一個 html form 可以新增學生 post 會把 data 放到 mongoDB裡面 在檔案裏面創建列表
+app.post("/students/insert", (req, res) => {
+  // 得知下面可以的話 可以變成這樣寫
+  // 靠 html form 可以新增資料的方式
+  let { id, name, age, merit, other } = req.body;
+  let newStudent = new Student({
+    id,
+    name,
+    age,
+    scholarship: { merit, other },
+  });
+  newStudent
+    .save()
+    .then(() => {
+      console.log("Student accepted.");
+      // 如果成功的話 就 render 到這個 accept.ejs 頁面
+      res.render("accept.ejs");
+    })
+    .catch((e) => {
+      console.log("Student not accepted.");
+      console.log(e);
+      res.render("reject.ejs");
+      // 如果失敗的話 就 render 到這個 reject.ejs 頁面
+    });
+  //console.log(req.body); // 來看一下這個 form 回傳給我們的是甚麼 出現在命令提示自元
+  //res.send("thanks for posting."); // 這個成功他就會把網站輸入的資料傳入  { id: '100', name: 'jie jing', age: '25', merit: '1500', other: '0' }
+});
+
+//////////////////////////////
+//////////////////////////////
+
+// 再來有人亂打資料一通的話 設定為不能亂打一通
+
+app.get("/*", (req, res) => {
+  res.status(404);
+  res.send("Not allowed.");
+});
+
+/////////////////////////
+////////////////////////////
+
+app.listen(3000, () => {
+  console.log("Server is running on port 3000.");
+});
+
+// localhost:3000 為網址
+
+
+//////////////////////////////////////
+////////////////////////////////////////
+///////////////////////////////////////
+
+
+再來幫每位學生都做一個個人頁面  /students/:id 還有啟動 mongoDB 的重點 
+
+app.js 程式碼也有修改
+
+const express = require("express");
+const app = express();
+const ejs = require("ejs");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const Student = require("./models/student"); // 連結到 student.js 運用他的模組
+
+app.use(express.static("public"));
+app.use(bodyParser.urlencoded({ extended: true })); // 幫助我們處理不同格式的請求資料 解析 JSON
+app.set("view engine", "ejs");
+
+mongoose
+  .connect("mongodb://127.0.0.1:27017/studentDB", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Successfully connected to mongoDB.");
+  })
+  .catch((e) => {
+    console.log("Connection failed.");
+    console.log(e);
+  });
+
+app.get("/", (req, res) => {
+  res.send("This is homepage.");
+});
+///////////////////////
+
+// 做一個連結到 students 頁面 獲取 ejs 再來如果再以下 students 發生問題怎麼辦 用 try
+app.get("/students", async (req, res) => {
+  try {
+    let data = await Student.find(); // 放進去資料會顯示這個首頁
+    res.render("students.ejs", { data }); // 把找到 所有的 data 放進去 data 裡面就有找到所有學生
+  } catch {
+    res.send("Error with finding data.");
+  }
+});
+
+///////////////////////
+
+// 新增加一個頁面 在裡面要有一個 html 的 form 網頁初始  就可以新增學生進來 全部的學生
+app.get("/students/insert", (req, res) => {
+  res.render("studentInsert.ejs"); // 在 view 裡面新增這個 studentInsert.ejs
+});
+
+// 幫學生建立個人頁面
+
+app.get("/students/:id", async (req, res) => {
+  let { id } = req.params;
+  try {
+    // 再來我們在 database 要找到 有這個 id 的學生
+    let data = await Student.findOne({ id }); // 回傳唯一的物件
+    // 在 views 裡面新增一個 studentPag.ejs
+    res.render("studentPage.ejs", { data }); // 如果找到 data 就來到  studentPag.ejs 做設定 標題為名字
+  } catch (e) {
+    res.send("Error!!");
+    console.log(e);
+  }
+
+  //console.log(req.params); // 測試顯示可以拿到 :id
+  //res.send("hello");  // 測試顯示可以拿到 :id
+});
+
+/////////////////////
+/////////////////////
+
+// 再來看能不能把 students.ejs 的頁面顯示出來 在 views 裡面創建 students.ejs
+
+/////////////////////
+// http://localhost:3000/students/insert 網址連到這就會出現設定的 tabel
+// 連結運用到  studentInsert.ejs get 產生一個 html form 可以新增學生 post 會把 data 放到 mongoDB裡面 在檔案裏面創建列表
+app.post("/students/insert", (req, res) => {
+  // 得知下面可以的話 可以變成這樣寫
+  // 靠 html form 可以新增資料的方式
+  let { id, name, age, merit, other } = req.body;
+  let newStudent = new Student({
+    id,
+    name,
+    age,
+    scholarship: { merit, other },
+  });
+  newStudent
+    .save()
+    .then(() => {
+      console.log("Student accepted.");
+      // 如果成功的話 就 render 到這個 accept.ejs 頁面
+      res.render("accept.ejs");
+    })
+    .catch((e) => {
+      console.log("Student not accepted.");
+      console.log(e);
+      res.render("reject.ejs");
+      // 如果失敗的話 就 render 到這個 reject.ejs 頁面
+    });
+  //console.log(req.body); // 來看一下這個 form 回傳給我們的是甚麼 出現在命令提示自元
+  //res.send("thanks for posting."); // 這個成功他就會把網站輸入的資料傳入  { id: '100', name: 'jie jing', age: '25', merit: '1500', other: '0' }
+});
+
+//////////////////////////////
+//////////////////////////////
+
+// 再來有人亂打資料一通的話 設定為不能亂打一通
+
+app.get("/*", (req, res) => {
+  res.status(404);
+  res.send("Not allowed.");
+});
+
+/////////////////////////
+////////////////////////////
+
+app.listen(3000, () => {
+  console.log("Server is running on port 3000.");
+});
+
+// localhost:3000 為網址
+// 記得一個重點 如果 mongoDB 報錯沒有連結服務的話 請到 命令提示字元右鍵管理者身分 輸入代碼 net start MongoDB
+
+
+///////////////////////////
+///////////////////////////
+
+再來在 studentPage.ejs 做一個 html form 表格
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= data.name %>></title> <!-- 學生的名字 -->
+</head>
+<body>
+    <!-- 學生的資訊 把它做成一個表格  -->
+    <table>
+        <tr>
+            <td>Student ID</td>
+            <td><%= data.id %></td>
+        </tr>
+        <tr>
+            <td>Fullname</td>
+            <td><%= data.name %></td>
+        </tr>
+        <tr>
+            <td>Age</td>
+            <td><%= data.age %></td>
+        </tr>
+        <tr>
+            <td>Merit Scholarship</td>
+            <td><%= data.scholarship.merit %></td>
+        </tr>
+        <tr>
+            <td>Other Scholarship</td>
+            <td><%= data.scholarship.other %></td>
+        </tr>
+        <tr>
+            <td>Total Scholarship</td>
+            <td><%= data.scholarship.merit + data.scholarship.other %></td>
+        </tr>
+    </table>
+
+    <!-- 再回到這個頁面的連結  -->
+    <a href="/students">Go back to students page.</a>
+
+</body>
+</html>
+
+<!-- 再到 students.ejs 放一個連結  <a></a>  裡面每一個都導向 students id 是什麼  -->
+<!-- http://localhost:3000/students/100 網址入入加進去的 id 就會跑出來 -->
+
+
+
+//////////////////////////////////////
+////////////////////////////////////////
+
+在修改一下 students.ejs 的程式碼 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Page</title>
+</head>
+<body>
+    <!-- 把所有學生放在 ul 裡面 http://localhost:3000/students/100 網址入入加進去的 id 就會跑出來   -->
+    <ul>
+        <% data.forEach(student => { %>
+            <li><a href="/students/<%= student.id %>"><%= student.name %></a></li>  <!-- 放進去資料會顯示這個首頁 連結 app的 -->
+       <% }) %>
+    </ul>
+</body>
+</html>
+////////////////////////////////////
+////////////////////////////////////
+////////////////////////////////////
+
+假如說填入這謝 這個網址打進去 後面的 id 就會是 長這樣 
+
+Student ID 	100
+Fullname 	min
+Age 	26
+Merit Scholarship 	2500
+Other Scholarship 	0
+Total Scholarship 	2500
+
+
+/////////////////////////////////////
+///////////////////////////////////
+
+再來是修改跟刪除 這個 student 做法 
+
+
+const express = require("express");
+const app = express();
+const ejs = require("ejs");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const Student = require("./models/student"); // 連結到 student.js 運用他的模組
+
+app.use(express.static("public"));
+app.use(bodyParser.urlencoded({ extended: true })); // 幫助我們處理不同格式的請求資料 解析 JSON
+app.set("view engine", "ejs");
+
+mongoose
+  .connect("mongodb://127.0.0.1:27017/studentDB", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Successfully connected to mongoDB.");
+  })
+  .catch((e) => {
+    console.log("Connection failed.");
+    console.log(e);
+  });
+
+app.get("/", (req, res) => {
+  res.send("This is homepage.");
+});
+///////////////////////
+
+// 做一個連結到 students 頁面 獲取 ejs 再來如果再以下 students 發生問題怎麼辦 用 try
+app.get("/students", async (req, res) => {
+  try {
+    let data = await Student.find(); // 放進去資料會顯示這個首頁
+    res.render("students.ejs", { data }); // 把找到 所有的 data 放進去 data 裡面就有找到所有學生
+  } catch {
+    res.send("Error with finding data.");
+  }
+});
+
+///////////////////////
+
+// 新增加一個頁面 在裡面要有一個 html 的 form 網頁初始  就可以新增學生進來 全部的學生
+app.get("/students/insert", (req, res) => {
+  res.render("studentInsert.ejs"); // 在 view 裡面新增這個 studentInsert.ejs
+});
+
+// 幫學生建立個人頁面
+
+app.get("/students/:id", async (req, res) => {
+  let { id } = req.params;
+  try {
+    // 再來我們在 database 要找到 有這個 id 的學生
+    let data = await Student.findOne({ id }); // 回傳唯一的物件
+    // 處理隨便輸入回傳錯誤資料頁面的樣子
+    if (data !== null) {
+      // 在 views 裡面新增一個 studentPag.ejs
+      res.render("studentPage.ejs", { data }); // 如果找到 data 就來到  studentPag.ejs 做設定 標題為名字
+    } else {
+      res.render("Cannot find this student. Please enter a valid id."); // 沒有這個資料就會顯示
+    }
+  } catch (e) {
+    res.send("Error!!"); // 就算有上面這個 程式碼還是有留著的必要性 因為上面有錯 還是會跳到這個 Error!!
+    console.log(e);
+  }
+
+  //console.log(req.params); // 測試顯示可以拿到 :id
+  //res.send("hello");  // 測試顯示可以拿到 :id
+});
+
+/////////////////////
+/////////////////////
+
+// 再來看能不能把 students.ejs 的頁面顯示出來 在 views 裡面創建 students.ejs
+
+/////////////////////
+// http://localhost:3000/students/insert 網址連到這就會出現設定的 tabel
+// 連結運用到  studentInsert.ejs get 產生一個 html form 可以新增學生 post 會把 data 放到 mongoDB裡面 在檔案裏面創建列表
+app.post("/students/insert", (req, res) => {
+  // 得知下面可以的話 可以變成這樣寫
+  // 靠 html form 可以新增資料的方式
+  let { id, name, age, merit, other } = req.body;
+  let newStudent = new Student({
+    id,
+    name,
+    age,
+    scholarship: { merit, other },
+  });
+  newStudent
+    .save()
+    .then(() => {
+      console.log("Student accepted.");
+      // 如果成功的話 就 render 到這個 accept.ejs 頁面
+      res.render("accept.ejs");
+    })
+    .catch((e) => {
+      console.log("Student not accepted.");
+      console.log(e);
+      res.render("reject.ejs");
+      // 如果失敗的話 就 render 到這個 reject.ejs 頁面
+    });
+  //console.log(req.body); // 來看一下這個 form 回傳給我們的是甚麼 出現在命令提示自元
+  //res.send("thanks for posting."); // 這個成功他就會把網站輸入的資料傳入  { id: '100', name: 'jie jing', age: '25', merit: '1500', other: '0' }
+});
+
+//////////////////////////////
+//////////////////////////////
+
+// 再來有人亂打資料一通的話 設定為不能亂打一通
+
+app.get("/*", (req, res) => {
+  res.status(404);
+  res.send("Not allowed.");
+});
+
+/////////////////////////
+////////////////////////////
+
+app.listen(3000, () => {
+  console.log("Server is running on port 3000.");
+});
+
+// localhost:3000 為網址
+// 記得一個重點 如果 mongoDB 報錯沒有連結服務的話 請到 命令提示字元右鍵管理者身分 輸入代碼 net start MongoDB
+
+
+///////////////////////////
+/////////////////////////////
+//////////////////////////////
+
+在來整理一下我們目前學到什麼
+
+
+Expres <-> Mongoose 
+
+Mongoose 的 C R U D
+
+create  
+read
+update
+delete  
+
+再來就是做後面兩項
+
+
+第四個頁面  /students/edit/:id 功能可以修改資料庫資料  get html form
+
+http request 1. get 2. post 3. put patch(update) 會取代舊的資料並把舊的移除 取代為全新的資料  4. delete
+
+再來到 app.js 撰寫新的程式碼  也創建了 edit.ejs 並使用了 reject.ejs
+
+app.js 程式碼 
+
+const express = require("express");
+const app = express();
+const ejs = require("ejs");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const Student = require("./models/student"); // 連結到 student.js 運用他的模組
+const methodOverride = require("method-override"); // 連結到 做資料修改要用的 一個模組
+
+app.use(express.static("public"));
+app.use(bodyParser.urlencoded({ extended: true })); // 幫助我們處理不同格式的請求資料 解析 JSON
+app.use(methodOverride("_method")); // 把修改得模組寫進去他的使用連結 就可以做覆寫的動作
+app.set("view engine", "ejs");
+
+mongoose
+  .connect("mongodb://127.0.0.1:27017/studentDB", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Successfully connected to mongoDB.");
+  })
+  .catch((e) => {
+    console.log("Connection failed.");
+    console.log(e);
+  });
+
+app.get("/", (req, res) => {
+  res.send("This is homepage.");
+});
+///////////////////////
+
+// 做一個連結到 students 頁面 獲取 ejs 再來如果再以下 students 發生問題怎麼辦 用 try
+app.get("/students", async (req, res) => {
+  try {
+    let data = await Student.find(); // 放進去資料會顯示這個首頁
+    res.render("students.ejs", { data }); // 把找到 所有的 data 放進去 data 裡面就有找到所有學生
+  } catch {
+    res.send("Error with finding data.");
+  }
+});
+
+///////////////////////
+
+// 新增加一個頁面 在裡面要有一個 html 的 form 網頁初始  就可以新增學生進來 全部的學生
+app.get("/students/insert", (req, res) => {
+  res.render("studentInsert.ejs"); // 在 view 裡面新增這個 studentInsert.ejs
+});
+
+// 幫學生建立個人頁面
+
+app.get("/students/:id", async (req, res) => {
+  let { id } = req.params;
+  try {
+    // 再來我們在 database 要找到 有這個 id 的學生
+    let data = await Student.findOne({ id }); // 回傳唯一的物件
+    // 處理隨便輸入回傳錯誤資料頁面的樣子
+    if (data !== null) {
+      // 在 views 裡面新增一個 studentPag.ejs
+      res.render("studentPage.ejs", { data }); // 如果找到 data 就來到  studentPag.ejs 做設定 標題為名字
+    } else {
+      res.render("Cannot find this student. Please enter a valid id."); // 沒有這個資料就會顯示
+    }
+  } catch (e) {
+    res.send("Error!!"); // 就算有上面這個 程式碼還是有留著的必要性 因為上面有錯 還是會跳到這個 Error!!
+    console.log(e);
+  }
+
+  //console.log(req.params); // 測試顯示可以拿到 :id
+  //res.send("hello");  // 測試顯示可以拿到 :id
+});
+
+/////////////////////
+/////////////////////
+
+// 再來看能不能把 students.ejs 的頁面顯示出來 在 views 裡面創建 students.ejs
+
+/////////////////////
+// http://localhost:3000/students/insert 網址連到這就會出現設定的 tabel
+// 連結運用到  studentInsert.ejs get 產生一個 html form 可以新增學生 post 會把 data 放到 mongoDB裡面 在檔案裏面創建列表
+app.post("/students/insert", (req, res) => {
+  // 得知下面可以的話 可以變成這樣寫
+  // 靠 html form 可以新增資料的方式
+  let { id, name, age, merit, other } = req.body;
+  let newStudent = new Student({
+    id,
+    name,
+    age,
+    scholarship: { merit, other },
+  });
+  newStudent
+    .save()
+    .then(() => {
+      console.log("Student accepted.");
+      // 如果成功的話 就 render 到這個 accept.ejs 頁面
+      res.render("accept.ejs");
+    })
+    .catch((e) => {
+      console.log("Student not accepted.");
+      console.log(e);
+      res.render("reject.ejs");
+      // 如果失敗的話 就 render 到這個 reject.ejs 頁面
+    });
+  //console.log(req.body); // 來看一下這個 form 回傳給我們的是甚麼 出現在命令提示自元
+  //res.send("thanks for posting."); // 這個成功他就會把網站輸入的資料傳入  { id: '100', name: 'jie jing', age: '25', merit: '1500', other: '0' }
+});
+
+//////////////////////////////
+//////////////////////////////
+
+// 寫一個學生可以修改資料的頁面
+
+app.get("/students/edit/:id", async (req, res) => {
+  let { id } = req.params; // 當有這個 id 的時候要把它拿來用 順帶創建 edit.ejs
+  try {
+    let data = await Student.findOne({ id });
+    if (data !== null) {
+      res.render("edit.ejs", { data }); // 放入這個 data 的目的 是因為 edit.ejs 會需要使用他
+    } else {
+      res.send("Cannot find student.");
+    }
+  } catch {
+    res.render("Error!");
+  }
+});
+
+// 再來我們要給他一個 put request 要怎麼讓他得到 get post 要借助一個 npm 叫做  method override npm 去下載模組 網址: https://www.npmjs.com/package/method-override
+// 再到 cmd npm install method-override 下載好後 網址會教你怎麼用
+// 在網站打 findoneandupdate mongoose 去找這個 api 怎麼用 網址 https://mongoosejs.com/docs/api/model.html#Model.findOneAndUpdate()
+
+app.put("/students/edit/:id", async (req, res) => {
+  let { id, name, age, merit, other } = req.body;
+  try {
+    let d = await Student.findOneAndUpdate(
+      { id },
+      { id, name, age, scholarship: { merit, other } },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    res.redirect(`/students/${id}`); // 更改完重新導向這個頁面的 id  redirect 用戶重定向到另一個 URL
+  } catch {
+    res.render("reject.ejs"); // 導入一個 錯誤的話就顯示這個程式檔的頁面
+  }
+});
+
+////////////////////////////////
+
+// 再來有人亂打資料一通的話 設定為不能亂打一通
+
+app.get("/*", (req, res) => {
+  res.status(404);
+  res.send("Not allowed.");
+});
+
+/////////////////////////
+////////////////////////////
+
+app.listen(3000, () => {
+  console.log("Server is running on port 3000.");
+});
+
+// localhost:3000 為網址
+// 記得一個重點 如果 mongoDB 報錯沒有連結服務的話 請到 命令提示字元右鍵管理者身分 輸入代碼 net start MongoDB
+
+///////////////////////////////
+////////////////////////////////
+///////////////////////////////
+
+edit.ejs 程式碼 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- 在這邊運用 edit.ejs 的 data 加入 value  -->
+    <form action="/students/edit/<%= data.id %>?_method=PUT" method="POST"> <!-- 加入 app.js 裡面的 "/students/edit/:id" 但是後面 id 要改掉  ?_method=PUT put request 的運用方式-->
+        <label for="id">ID:</label>
+        <input type="number" id="id" name="id" value="<%= data.id %>" />
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name"  value="<%= data.name %>" />
+        <label for="age">Age:</label>
+        <input type="number" id="age" name="age"  value="<%= data.age %>" />
+        <label for="merit">Merit:</label>
+        <input type="number" id="merit" name="merit"  value="<%= data.scholarship.merit %>"/>
+        <label for="other">Other:</label>
+        <input type="number" id="other" name="other"  value="<%= data.scholarship.other %>"/>
+        <button>Submit</button>
+    </form> 
+</body>
+</html>
+
+
+//////////////////////////////////////
+////////////////////////////////////
+////////////////////////////////////////
+
+再來是講解怎麼移除資料  // 刪除資料頁面與方式
+
+app.js 程式碼修改 
+
+
+const express = require("express");
+const app = express();
+const ejs = require("ejs");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const Student = require("./models/student"); // 連結到 student.js 運用他的模組
+const methodOverride = require("method-override"); // 連結到 做資料修改要用的 一個模組
+
+app.use(express.static("public"));
+app.use(bodyParser.urlencoded({ extended: true })); // 幫助我們處理不同格式的請求資料 解析 JSON
+app.use(methodOverride("_method")); // 把修改得模組寫進去他的使用連結 就可以做覆寫的動作
+app.set("view engine", "ejs");
+
+mongoose
+  .connect("mongodb://127.0.0.1:27017/studentDB", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Successfully connected to mongoDB.");
+  })
+  .catch((e) => {
+    console.log("Connection failed.");
+    console.log(e);
+  });
+
+app.get("/", (req, res) => {
+  res.send("This is homepage.");
+});
+///////////////////////
+
+// 做一個連結到 students 頁面 獲取 ejs 再來如果再以下 students 發生問題怎麼辦 用 try
+app.get("/students", async (req, res) => {
+  try {
+    let data = await Student.find(); // 放進去資料會顯示這個首頁
+    res.render("students.ejs", { data }); // 把找到 所有的 data 放進去 data 裡面就有找到所有學生
+  } catch {
+    res.send("Error with finding data.");
+  }
+});
+
+///////////////////////
+
+// 新增加一個頁面 在裡面要有一個 html 的 form 網頁初始  就可以新增學生進來 全部的學生
+app.get("/students/insert", (req, res) => {
+  res.render("studentInsert.ejs"); // 在 view 裡面新增這個 studentInsert.ejs
+});
+
+// 幫學生建立個人頁面
+
+app.get("/students/:id", async (req, res) => {
+  let { id } = req.params;
+  try {
+    // 再來我們在 database 要找到 有這個 id 的學生
+    let data = await Student.findOne({ id }); // 回傳唯一的物件
+    // 處理隨便輸入回傳錯誤資料頁面的樣子
+    if (data !== null) {
+      // 在 views 裡面新增一個 studentPag.ejs
+      res.render("studentPage.ejs", { data }); // 如果找到 data 就來到  studentPag.ejs 做設定 標題為名字
+    } else {
+      res.render("Cannot find this student. Please enter a valid id."); // 沒有這個資料就會顯示
+    }
+  } catch (e) {
+    res.send("Error!!"); // 就算有上面這個 程式碼還是有留著的必要性 因為上面有錯 還是會跳到這個 Error!!
+    console.log(e);
+  }
+
+  //console.log(req.params); // 測試顯示可以拿到 :id
+  //res.send("hello");  // 測試顯示可以拿到 :id
+});
+
+/////////////////////
+/////////////////////
+
+// 再來看能不能把 students.ejs 的頁面顯示出來 在 views 裡面創建 students.ejs
+
+/////////////////////
+// http://localhost:3000/students/insert 網址連到這就會出現設定的 tabel
+// 連結運用到  studentInsert.ejs get 產生一個 html form 可以新增學生 post 會把 data 放到 mongoDB裡面 在檔案裏面創建列表
+app.post("/students/insert", (req, res) => {
+  // 得知下面可以的話 可以變成這樣寫
+  // 靠 html form 可以新增資料的方式
+  let { id, name, age, merit, other } = req.body;
+  let newStudent = new Student({
+    id,
+    name,
+    age,
+    scholarship: { merit, other },
+  });
+  newStudent
+    .save()
+    .then(() => {
+      console.log("Student accepted.");
+      // 如果成功的話 就 render 到這個 accept.ejs 頁面
+      res.render("accept.ejs");
+    })
+    .catch((e) => {
+      console.log("Student not accepted.");
+      console.log(e);
+      res.render("reject.ejs");
+      // 如果失敗的話 就 render 到這個 reject.ejs 頁面
+    });
+  //console.log(req.body); // 來看一下這個 form 回傳給我們的是甚麼 出現在命令提示自元
+  //res.send("thanks for posting."); // 這個成功他就會把網站輸入的資料傳入  { id: '100', name: 'jie jing', age: '25', merit: '1500', other: '0' }
+});
+
+//////////////////////////////
+//////////////////////////////
+
+// 寫一個學生可以修改資料的頁面
+
+app.get("/students/edit/:id", async (req, res) => {
+  let { id } = req.params; // 當有這個 id 的時候要把它拿來用 順帶創建 edit.ejs
+  try {
+    let data = await Student.findOne({ id });
+    if (data !== null) {
+      res.render("edit.ejs", { data }); // 放入這個 data 的目的 是因為 edit.ejs 會需要使用他
+    } else {
+      res.send("Cannot find student.");
+    }
+  } catch {
+    res.render("Error!");
+  }
+});
+
+// 再來我們要給他一個 put request 要怎麼讓他得到 get post 要借助一個 npm 叫做  method override npm 去下載模組 網址: https://www.npmjs.com/package/method-override
+// 再到 cmd npm install method-override 下載好後 網址會教你怎麼用
+// 在網站打 findoneandupdate mongoose 去找這個 api 怎麼用 網址 https://mongoosejs.com/docs/api/model.html#Model.findOneAndUpdate()
+
+app.put("/students/edit/:id", async (req, res) => {
+  let { id, name, age, merit, other } = req.body;
+  try {
+    let d = await Student.findOneAndUpdate(
+      { id },
+      { id, name, age, scholarship: { merit, other } },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    res.redirect(`/students/${id}`); // 更改完重新導向這個頁面的 id  redirect 用戶重定向到另一個 URL
+  } catch {
+    res.render("reject.ejs"); // 導入一個 錯誤的話就顯示這個程式檔的頁面
+  }
+});
+
+////////////////////////////////
+
+//////////////////////////////
+// 刪除資料頁面與方式 用 postman 的方式 先用 cmd 打開檔案 node app.js 到 postman 左邊有個 下拉式選單 選到 DELETE 輸入 localhost:3000/students/delete/100 然後 右邊按鈕 Send 然後下面會顯示成功 Deleted successfully.
+// 使用以上方式 Send 就成功把上面的 ID 100 頁面 移除了
+app.delete("/students/delete/:id", (req, res) => {
+  let { id } = req.params;
+  Student.deleteOne({ id })
+    .then((meg) => {
+      console.log(meg);
+      res.send("Deleted successfully.");
+    })
+    .catch((e) => {
+      console.log(e);
+      res.send("Delete failed.");
+    });
+});
+
+///////////////////////////////
+// 再來有人亂打資料一通的話 設定為不能亂打一通
+
+app.get("/*", (req, res) => {
+  res.status(404);
+  res.send("Not allowed.");
+});
+
+/////////////////////////
+////////////////////////////
+
+app.listen(3000, () => {
+  console.log("Server is running on port 3000.");
+});
+
+// localhost:3000 為網址
+// 記得一個重點 如果 mongoDB 報錯沒有連結服務的話 請到 命令提示字元右鍵管理者身分 輸入代碼 net start MongoDB
+
+
+///////////////////////////
+///////////////////////////
+///////////////////////////
+
+
+
